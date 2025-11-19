@@ -41,3 +41,4 @@ mail.logout()
 
 print("✔ Limpeza finalizada com sucesso!")
 
+
