@@ -1,39 +1,43 @@
-# importei as biblitecas 
-import imaplib  #permite acessar sua caixa de entrada pelo protocolo IMAP.
-import email #biblioteca que ajuda a ler mensagens
+import imaplib
 
-# declarando meu email e senha 
-email = "misaelcosta069gmail.com"
-senha = "mffh mpbi dkmw qgry"
+email = "misaelcosta069@gmail.com"
+senha = "mffhmpbidkmwqgry"
 
-#conectar o servidor do imap do Gmail
-"""
-Abrem uma conexão segura com o Gmail
-Entram na sua conta usando e-mail + senha app
-"""
+
 mail = imaplib.IMAP4_SSL("imap.gmail.com")
-mail.login("misaelcosta069@gmail.com", "mffh mpbi dkmw qgry" )
-
-# Selecionar a caixa de entrada 
+mail.login("misaelcosta069@gmail.com", "mffhmpbidkmwqgry")
 mail.select("inbox")
 
-# Buscar emails antes de 01/01/2025
-#"Google, me traga todos os e-mails enviados ANTES de 1º de janeiro de 2025".
-status, dados = mail.search(None, 'BEFORE 01-jan-2025')
+# Pegar todos os UIDs de emails ANTES de 2025
+status, dados = mail.uid("SEARCH", None, 'BEFORE 01-Jan-2025')
 
-# Transformar os UIDs em lista
-#Aqui estamos apenas pegando todos os IDs dos e-mails que têm que ser apagados.
-email_ids = dados[0].split()
-print(f"encontrados {len(email_ids)} emails para apagar")
+uids = dados[0].split()
+total = len(uids)
 
-# Apagar todos
-#Só para você saber o tamanho da limpeza.
-for uid in email_ids:
-    mail.store(uid, "+FLAGS", "\\deleted")
+print(f"Total a apagar: {total}")
 
-# finalizar remoçao
-mail.expunge() #o Gmail deleta de vez e libera espaço.
+# Transformar os UIDs em inteiros e ordenar
+uids = sorted([int(x) for x in uids])
+
+# Tamanho do range — pode ser 500, 1000, 2000
+STEP = 800
+
+# Criar blocos de ranges
+for i in range(0, len(uids), STEP):
+    inicio = uids[i]
+    fim = uids[min(i + STEP - 1, len(uids) - 1)]
+    range_uid = f"{inicio}:{fim}"
+
+    print(f"Apagando range UID {range_uid}...")
+
+    # Apagar o range inteiro de uma vez
+    mail.uid("STORE", range_uid, "+FLAGS", "\\Deleted")
+    mail.expunge()
+
+    print(f"Range {range_uid} concluído.")
+
 mail.close()
 mail.logout()
 
-print("limpeza completa") 
+print("✔ Limpeza finalizada com sucesso!")
+
